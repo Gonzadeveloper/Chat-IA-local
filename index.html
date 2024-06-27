@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatGPT local</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background: #f0f0f0;
+            display: grid;
+            place-content: center;
+            height: 100dvh; /*dinamica viewport heigt solucion para tefefonos barra inferior*/
+        }
+
+        main {
+           width: 400px;
+           max-width: 100%;
+           height: 70vh;
+           
+           background: #fff;
+           border: 1px solid #ccc;
+           border-radius: 4px;
+           box-shadow: 0 0 10px rgba(0, 0, 0, 1);
+           padding: 8px;
+           margin-bottom: 16px;
+
+           overflow-y: auto;
+        }
+
+        ul {
+            display: flex;
+            flex-direction: column;
+            list-style: none;
+            padding: 0;
+        }
+
+        .message{
+            display: flex;
+            flex-direction: column;
+            margin: 4px 0;
+            padding: 4px 8px;
+
+            > span {
+                width: 36px;
+                height: 36px;
+                background-color: #eee;
+                font-size: 12px;
+                font-weight: 500;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                border-radius: 999999px;
+            }
+
+            p {
+                border-radius: 4px;
+                padding: 4px 8px;
+                margin-top: 8px;
+            }
+
+            &.user{
+                align-items: flex-end;
+                align-self: flex-end;
+                span, p {
+                    background: rgba(219, 236, 255);
+                }
+            }
+
+            &.bot{
+                align-self: flex-start;
+                span, p {
+                    background: rgb(198, 255, 220);
+                }
+            }     
+        }
+
+        form input {
+                    border-radius: 999999px;
+                    width: 78%;
+                    flex-grow: 1;
+                    border: 0;
+                    padding: 8px;
+                    margin-right: 8px;
+                    border: 1px solid #ccc;
+                }
+
+                button {
+                    background: #09f;
+                    border: 0;
+                    color: white;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    padding: 8px;
+                    transition: background .3s ease;
+
+                    &:hover {
+                        background: rgb(0 , 104, 173);
+                    }
+                }
+    </style>
+
+    <script type="module">
+        //con modulke podemos trabajr con seste srcipt arriba ya que primero lee toda la pagina y desopues ejecuta este srcipt
+        //ya sabemos que JS lee de arriba para abajao pero con module evitamos los errores 
+        
+        //con esto abreviamos los querySelector
+        const $ = el => document.querySelector(el)
+
+        //el signo $ delante de una variable es para 
+        //indicar que es un elemento del DOM 
+
+        const $form = $('form')
+        const $input = $('input')
+        const $template = $('#message-template')
+        const $messages = $('ul')
+        const $container = $('main')
+        const $button = $('button')
+
+
+        $form.addEventListener('submit', (event) => {
+            event.preventDefault()
+            const messageText = $input.value.trim()
+
+            if(messageText !== '') {
+                $input.value = ''
+            }
+
+            addMessage(messageText, 'user')
+
+        })
+
+        function addMessage(text, sender) {
+            //clonar el template
+            const clonedTemplate = $template.content.cloneNode(true)
+            const $newMessage = clonedTemplate.querySelector('.message')
+
+            const $who = $newMessage.querySelector('span')
+            const $text = $newMessage.querySelector('p')
+
+            $text.textContent = text
+            $who.textContent = sender === 'bot' ? 'GPT' : 'Tú'
+            $newMessage.classList.add(sender)
+            
+            // actualizar el scroll
+
+            $messages.appendChild($newMessage)
+
+        }
+    </script>
+
+</head>
+<body>
+    <main>
+        <ul>
+            <li class="message bot">
+                <span>GPT</span>
+                <p>Esta es la respuesta del bot</p>
+            </li>
+
+            <li class="message user">
+                <span>Tu</span>
+                <p>Esta es la respuesta del usuario</p>
+            </li>
+
+            <li class="message user">
+                <span>Tu</span>
+                <p>Esta es la respuesta del usuario
+                    y es una respuesta muy larga para ver que no se rompe nada </p>
+            </li>
+        </ul>
+    </main>
+
+    <form>
+        <input placeholder="Escribe tu mensaje aquí...">
+        <button>Enviar</button>
+    </form>
+
+    <template id="message-template">
+        <li class="message">
+            <span></span>
+            <p></p>
+        </li>
+    </template>
+</body>
+</html>
