@@ -26,6 +26,7 @@
            margin-bottom: 16px;
 
            overflow-y: auto;
+           scroll-behavior: smooth;
         }
 
         ul {
@@ -94,16 +95,37 @@
                     padding: 8px;
                     transition: background .3s ease;
 
+                    &[disabled] {
+                        background: #ccc;
+                        opacity: .6;
+                        pointer-events: none;
+                    }
+
                     &:hover {
                         background: rgb(0 , 104, 173);
                     }
                 }
+
+                small{
+                    font-size: 10px;
+                    color: #555;
+                    position: fixed;
+                    bottom: 10px;
+                    left: 0;
+                    right: 0;
+                    margin: auto;
+                    width: 400px;
+                }
     </style>
 
     <script type="module">
+
+        //Estamos importando este metodo de esta URl
+        import { CreateMLCEngine } from 'https://esm.run/@mlc-ai/web-llm'
+
         //con modulke podemos trabajr con seste srcipt arriba ya que primero lee toda la pagina y desopues ejecuta este srcipt
         //ya sabemos que JS lee de arriba para abajao pero con module evitamos los errores 
-        
+
         //con esto abreviamos los querySelector
         const $ = el => document.querySelector(el)
 
@@ -116,9 +138,29 @@
         const $messages = $('ul')
         const $container = $('main')
         const $button = $('button')
+        const $info = $('small')
+
+        let messages = []
+
+        //modelo con el que vamos a trabajar
+         const SELECTED_MODEL = "Llama-3-8B-Instruct-q4f32_1-MLC-1k"
+
+        //creamos el motor 
+        const engine = await CreateMLCEngine(
+            SELECTED_MODEL,
+            {
+                initProgressCallback: (info) => {  
+                    console.log("initProgressCallback", info)
+                    $info.textContent = `${info.text}%`
+                    if(info.progress === 1){
+                        $button.removeAttribute('disabled')
+                    }
+                }
+            }
+        )
 
 
-        $form.addEventListener('submit', (event) => {
+        $form.addEventListener('submit', async (event) => {
             event.preventDefault()
             const messageText = $input.value.trim()
 
@@ -127,7 +169,23 @@
             }
 
             addMessage(messageText, 'user')
+            $button.setAttribute('disabled', '')
 
+            const userMessage = {
+                role: 'user',
+                content: messageText
+            }
+
+            messages.push(userMessage)
+
+            const reply = await engine.chat.completions.create({
+                messages
+            })
+
+            $button.removeAttribute('disabled')
+            const botMessage = reply.choices[0].message
+            messages.push(botMessage)
+            addMessage(botMessage.content, 'bot')
         })
 
         function addMessage(text, sender) {
@@ -142,39 +200,26 @@
             $who.textContent = sender === 'bot' ? 'GPT' : 'Tú'
             $newMessage.classList.add(sender)
             
-            // actualizar el scroll
-
+            
             $messages.appendChild($newMessage)
-
+            
+            // actualizar el scroll
+            $container.scrollTop = $container.scrollHeight
         }
     </script>
 
 </head>
 <body>
     <main>
-        <ul>
-            <li class="message bot">
-                <span>GPT</span>
-                <p>Esta es la respuesta del bot</p>
-            </li>
-
-            <li class="message user">
-                <span>Tu</span>
-                <p>Esta es la respuesta del usuario</p>
-            </li>
-
-            <li class="message user">
-                <span>Tu</span>
-                <p>Esta es la respuesta del usuario
-                    y es una respuesta muy larga para ver que no se rompe nada </p>
-            </li>
-        </ul>
+        <ul></ul>
     </main>
 
     <form>
         <input placeholder="Escribe tu mensaje aquí...">
-        <button>Enviar</button>
+        <button disabled>Enviar</button>
     </form>
+
+    <small>&nbsp;</small>
 
     <template id="message-template">
         <li class="message">
