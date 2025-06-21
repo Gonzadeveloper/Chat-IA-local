@@ -1,3 +1,0 @@
--Utiliza Web Gpu (usar la gpu de la pc en el navegador)
--Web workes (para hacer multihilo en javascript)
--Utilizamos dependecia de web llama
